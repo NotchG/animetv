@@ -72,6 +72,51 @@ class _PlayerState extends State<Player> {
     await _controller.ready;
   }
 
+  Color getColor(Set<MaterialState> states, bool curr) {
+    const Set<MaterialState> interactiveStates = <MaterialState>{
+      MaterialState.pressed,
+      MaterialState.hovered,
+      MaterialState.focused,
+    };
+    if (states.any(interactiveStates.contains)) {
+      return Colors.greenAccent;
+    }
+    if (curr) {
+      return Colors.redAccent;
+    } else {
+      return Colors.blueAccent;
+    }
+
+  }
+
+  Widget episodesButton(int ep) {
+    return Row(
+      children: [
+        (
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  currEps = ep;
+                });
+                AnimeScrape(url: Url.replaceAll("https://gogoanime.fi", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
+                setState(() {
+                  currEps = ep;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(ep.toString(), style: TextStyle(fontSize: 1/80 * MediaQuery.of(context).size.width),),
+              ),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((states) => getColor(states, ep == currEps)),
+                  elevation: MaterialStateProperty.all(0)
+              ),
+            )
+        ),
+        SizedBox(width: 10.0,)
+      ],);
+  }
+
   @override
   void dispose() async {
 
@@ -309,7 +354,7 @@ class _PlayerState extends State<Player> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      for(int i = 1;i <= totalEps;i++) ImageCard(ep: i)
+                      for(int i = 1;i <= totalEps;i++) episodesButton(i)
                     ],
                   ),
                 )
@@ -392,7 +437,7 @@ class _ImageCardState extends State<ImageCard> {
                 });
                 AnimeScrape(url: Url.replaceAll("https://gogoanime.fi", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
                 setState(() {
-
+                  currEps = widget.ep;
                 });
               },
               child: Padding(

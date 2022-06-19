@@ -1,15 +1,12 @@
-import 'dart:ffi';
 
 import 'package:animetv/class/anime.dart';
 import 'package:animetv/pages/Loading.dart';
 import 'package:animetv/pages/search.dart';
 import 'package:animetv/services/animescrape.dart';
 import 'package:dpad_container/dpad_container.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 
 var title = "";
