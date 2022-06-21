@@ -228,7 +228,7 @@ class _HomeState extends State<Home> {
                           Container(
                           decoration: const BoxDecoration(
                             image: DecorationImage(
-                              image: NetworkImage("https://media-exp1.licdn.com/dms/image/C4E03AQGYy7nj4orOQg/profile-displayphoto-shrink_100_100/0/1629097702192?e=1652918400&v=beta&t=iGo0IIl1m4kyl4p3ORY3xJNaF87Xfyj3sUjbY6NHDsk"),
+                              image: NetworkImage("https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/A_black_image.jpg/640px-A_black_image.jpg"),
                               fit: BoxFit.fill,
                             ),
                             shape: BoxShape.circle,
@@ -427,7 +427,8 @@ class _HomeState extends State<Home> {
                                 print(globalLink);
                                 AnimeScrape(url: globalLink).getBaseEpisodeLink().then((value) => Navigator.pushNamed(context, '/player', arguments: {
                                   'url': value + "-episode-",
-                                  'totalEps': totaleps
+                                  'totalEps': totaleps,
+                                  'title': title
                                 }));
                               } : null,
                               child: Padding(

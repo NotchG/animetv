@@ -22,7 +22,9 @@ class _PlayerState extends State<Player> {
 
   bool _isWebviewSuspended = false;
   Map data = {};
+  String title = "";
 
+  String baseUrl = "gogoanime.lu";
   int totalEps = 0;
 
   double currSec = 0;
@@ -39,7 +41,7 @@ class _PlayerState extends State<Player> {
       final sub = _controller.url.listen((event) {
         if (event.contains("nextEpisodeNotchG")) {
           if (currEps < totalEps) {
-            AnimeScrape(url: Url.replaceAll("https://gogoanime.fi", "") +
+            AnimeScrape(url: Url.replaceAll("https://" + baseUrl + "", "") +
                 (currEps + 1).toString()).getPlayer().then((value) =>
                 _controller.loadUrl(value));
             setState(() {
@@ -120,7 +122,7 @@ class _PlayerState extends State<Player> {
                 setState(() {
                   currEps = ep;
                 });
-                AnimeScrape(url: Url.replaceAll("https://gogoanime.fi", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
+                AnimeScrape(url: Url.replaceAll("https://" + baseUrl + "", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
                 setState(() {
                   currEps = ep;
                 });
@@ -236,7 +238,7 @@ class _PlayerState extends State<Player> {
         ElevatedButton(
           onPressed: () {
             currEps = ep;
-            AnimeScrape(url: Url.replaceAll("https://gogoanime.fi", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
+            AnimeScrape(url: Url.replaceAll("https://" + baseUrl + "", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
             setState(() {
 
             });
@@ -258,6 +260,17 @@ class _PlayerState extends State<Player> {
   bool back10secButton = false;
   bool forward10secButton = false;
   bool fullscreenButton = false;
+  bool backButton = false;
+  bool episodeMenuButton = false;
+
+  void initializeAnime() async {
+    if (!_controller.value.isInitialized) {
+      await Future.delayed(const Duration(seconds: 1));
+      initializeAnime();
+    } else {
+      AnimeScrape(url: Url.replaceAll("https://" + baseUrl + "", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -267,7 +280,8 @@ class _PlayerState extends State<Player> {
       data = ModalRoute.of(context)!.settings.arguments as Map;
       Url = data['url'].toString();
       totalEps = data['totalEps'];
-      AnimeScrape(url: Url.replaceAll("https://gogoanime.fi", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
+      title = data['title'].toString();
+      initializeAnime();
     }
 
     Color getColor(Set<MaterialState> states) {
@@ -286,141 +300,224 @@ class _PlayerState extends State<Player> {
       body: Stack(
         children: [
           Center(
-          child: compositeView(),
-        ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                width: onMenu ? MediaQuery.of(context).size.width : 0,
-                child: Stack(
-                    alignment: AlignmentDirectional.bottomCenter,
+            child: compositeView(),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 20.0,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
                     children: [
-                      Container(
-                        height: MediaQuery.of(context).size.height,
-                        width: MediaQuery.of(context).size.width,
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            gradient: LinearGradient(
-                                begin: FractionalOffset.bottomCenter,
-                                end: FractionalOffset.topCenter,
-                                colors: [
-                                  Colors.black.withOpacity(1),
-                                  Colors.black.withOpacity(0)
-                                ],
-                                stops: const [
-                                  0.0,
-                                  1.0
-                                ]
+                      Expanded(
+                        flex: 1,
+                        child: Row(
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () async {
+
+                              },
+                              style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                                  elevation: MaterialStateProperty.all(0)
+                              ),
+                              onFocusChange: (bool b) {
+                                setState(() {
+                                  backButton = b;
+                                });
+                              },
+                              icon: Icon(
+                                Icons.arrow_back_ios,
+                                size: 1/30 * MediaQuery.of(context).size.width,
+                                color: backButton ? Colors.greenAccent : Colors.white,
+                              ), label: SizedBox(),
+                            ),
+                            Text(
+                              title,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20.0
+                              ),
                             )
+                          ],
                         ),
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(30.0),
-                            child: SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                disabledActiveTrackColor: Colors.white,
-                                disabledInactiveTrackColor: Colors.grey,
-                                disabledThumbColor: Colors.white,
+                      Expanded(
+                        flex: 1,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () async {
+
+                              },
+                              style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                                  elevation: MaterialStateProperty.all(0)
                               ),
-                              child: Slider(
-                                value: currSec,
-                                onChanged: null,
-                                min: 0.0,
-                                max: 100.0,
-                                inactiveColor: Colors.white,
-                                thumbColor: Colors.white,
+                              onFocusChange: (bool b) {
+                                setState(() {
+                                  episodeMenuButton = b;
+                                });
+                              },
+                              icon: Icon(
+                                Icons.video_collection_sharp,
+                                size: 1/30 * MediaQuery.of(context).size.width,
+                                color: episodeMenuButton ? Colors.greenAccent : Colors.white,
+                              ), label: SizedBox(),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Stack(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  width: onMenu ? MediaQuery.of(context).size.width : 0,
+                  child: Stack(
+                      alignment: AlignmentDirectional.bottomCenter,
+                      children: [
+                        Container(
+                          height: MediaQuery.of(context).size.height,
+                          width: MediaQuery.of(context).size.width,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              gradient: LinearGradient(
+                                  begin: FractionalOffset.bottomCenter,
+                                  end: FractionalOffset.topCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(1),
+                                    Colors.black.withOpacity(0)
+                                  ],
+                                  stops: const [
+                                    0.0,
+                                    1.0
+                                  ]
+                              )
+                          ),
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(30.0),
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  disabledActiveTrackColor: Colors.white,
+                                  disabledInactiveTrackColor: Colors.grey,
+                                  disabledThumbColor: Colors.white,
+                                ),
+                                child: Slider(
+                                  value: currSec,
+                                  onChanged: null,
+                                  min: 0.0,
+                                  max: 100.0,
+                                  inactiveColor: Colors.white,
+                                  thumbColor: Colors.white,
+                                ),
                               ),
                             ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ElevatedButton.icon(
-                                onPressed: () async {
-                                  await _controller.executeScript('document.getElementsByClassName("jw-icon jw-icon-inline jw-button-color jw-reset jw-icon-rewind")[0].click()');
-                                },
-                                style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                                    overlayColor: MaterialStateProperty.all(Colors.transparent),
-                                    elevation: MaterialStateProperty.all(0)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await _controller.executeScript('document.getElementsByClassName("jw-icon jw-icon-inline jw-button-color jw-reset jw-icon-rewind")[0].click()');
+                                  },
+                                  style: ButtonStyle(
+                                      backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                                      overlayColor: MaterialStateProperty.all(Colors.transparent),
+                                      elevation: MaterialStateProperty.all(0)
+                                  ),
+                                  onFocusChange: (bool b) {
+                                    setState(() {
+                                      back10secButton = b;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    Icons.fast_rewind,
+                                    size: 1/25 * MediaQuery.of(context).size.width,
+                                    color: back10secButton ? Colors.greenAccent : Colors.white,
+                                  ), label: SizedBox(),
                                 ),
-                                onFocusChange: (bool b) {
-                                  setState(() {
-                                    back10secButton = b;
-                                  });
-                                },
-                                icon: Icon(
-                                  Icons.fast_rewind,
-                                  size: 1/30 * MediaQuery.of(context).size.width,
-                                  color: back10secButton ? Colors.greenAccent : Colors.white,
-                                ), label: SizedBox(),
-                              ),
-                              SizedBox(
-                                width: 10.0,
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: () async {
-                                  await _controller.executeScript('document.getElementsByTagName("video")[0].click();');
-                                  setState(() {
-                                    isPause = !isPause;
-                                  });
-                                },
-                                style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                                    overlayColor: MaterialStateProperty.all(Colors.transparent),
-                                    elevation: MaterialStateProperty.all(0)
+                                SizedBox(
+                                  width: 10.0,
                                 ),
-                                onFocusChange: (bool b) {
-                                  setState(() {
-                                    pauseButton = b;
-                                  });
-                                },
-                                icon: Icon(
-                                  isPause ? Icons.play_circle : Icons.pause_circle,
-                                  size: 1/30 * MediaQuery.of(context).size.width,
-                                  color: pauseButton ? Colors.greenAccent : Colors.white,
-                                ), label: SizedBox(),
-                              ),
-                              SizedBox(
-                                width: 10.0,
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: () async {
-                                  await _controller.executeScript('document.getElementsByClassName("jw-icon jw-icon-inline jw-button-color jw-reset")[9].click()');
-                                },
-                                style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                                    overlayColor: MaterialStateProperty.all(Colors.transparent),
-                                    elevation: MaterialStateProperty.all(0)
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await _controller.executeScript('document.getElementsByTagName("video")[0].click();');
+                                    setState(() {
+                                      isPause = !isPause;
+                                    });
+                                  },
+                                  style: ButtonStyle(
+                                      backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                                      overlayColor: MaterialStateProperty.all(Colors.transparent),
+                                      elevation: MaterialStateProperty.all(0)
+                                  ),
+                                  onFocusChange: (bool b) {
+                                    setState(() {
+                                      pauseButton = b;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    isPause ? Icons.play_circle : Icons.pause_circle,
+                                    size: 1/25 * MediaQuery.of(context).size.width,
+                                    color: pauseButton ? Colors.greenAccent : Colors.white,
+                                  ), label: SizedBox(),
                                 ),
-                                onFocusChange: (bool b) {
-                                  setState(() {
-                                    forward10secButton = b;
-                                  });
-                                },
-                                icon: Icon(
-                                  Icons.fast_forward,
-                                  size: 1/30 * MediaQuery.of(context).size.width,
-                                  color: forward10secButton ? Colors.greenAccent : Colors.white,
-                                ), label: SizedBox(),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 40.0,
-                          )
-                        ],
-                      ),
-                    ]
+                                SizedBox(
+                                  width: 10.0,
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await _controller.executeScript('document.getElementsByClassName("jw-icon jw-icon-inline jw-button-color jw-reset")[9].click()');
+                                  },
+                                  style: ButtonStyle(
+                                      backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                                      overlayColor: MaterialStateProperty.all(Colors.transparent),
+                                      elevation: MaterialStateProperty.all(0)
+                                  ),
+                                  onFocusChange: (bool b) {
+                                    setState(() {
+                                      forward10secButton = b;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    Icons.fast_forward,
+                                    size: 1/25 * MediaQuery.of(context).size.width,
+                                    color: forward10secButton ? Colors.greenAccent : Colors.white,
+                                  ), label: SizedBox(),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 40.0,
+                            )
+                          ],
+                        ),
+                      ]
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
+        ]
       ),
     );
   }

@@ -245,7 +245,8 @@ class _HomeState extends State<Home> {
                                 print("clicked");
                                 AnimeScrape(url: globalLink).getBaseEpisodeLink().then((value) => Navigator.pushNamed(context, '/player', arguments: {
                                   'url': value + "-episode-",
-                                  'totalEps': totaleps
+                                  'totalEps': totaleps,
+                                  'title': title
                                 }));
                               } : null,
                               child: DpadContainer(

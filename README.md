@@ -7,6 +7,7 @@ scraped from gogoanime
 
 
 # Todo
+* Account and friends system
 
 #### Severe bugs
 * Bad state stream error when exiting from an anime and then watching another anime

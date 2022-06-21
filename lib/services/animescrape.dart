@@ -55,6 +55,7 @@ class AnimeScrape {
   }
 
   Future<String> getBaseEpisodeLink() async {
+    print("https://" + baseUrl + "/" + url.replaceAll("https://" + baseUrl + "/category/", "").replaceFirst("/category/", ""));
     return "https://" + baseUrl + "/" + url.replaceAll("https://" + baseUrl + "/category/", "").replaceFirst("/category/", "");
   }
 
