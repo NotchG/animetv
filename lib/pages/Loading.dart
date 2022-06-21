@@ -7,12 +7,22 @@ class Loading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xff151515),
+      backgroundColor: Colors.black,
       body: Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
         child: Center(
-          child: AnimatedTextKit(
+          child: Image.asset(
+            'assets/notchginc.gif',
+          )
+        ),
+      ),
+    );
+  }
+}
+
+/*
+AnimatedTextKit(
             animatedTexts: [
               RotateAnimatedText(
                   "NotchG Inc.",
@@ -34,8 +44,4 @@ class Loading extends StatelessWidget {
             repeatForever: true,
             pause: Duration(milliseconds: 2000),
           ),
-        ),
-      ),
-    );
-  }
-}
+ */

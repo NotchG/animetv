@@ -11,6 +11,7 @@ class AnimeScrape {
   Anime? anime;
   Bs4Element? element;
   List<AnimeSearch> search = [];
+  String baseUrl = 'gogoanime.lu';
   Map<String, String> header = {
     HttpHeaders.userAgentHeader: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
     HttpHeaders.acceptHeader: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -21,7 +22,7 @@ class AnimeScrape {
   AnimeScrape({required this.url});
 
   Future<void> getPopular() async {
-    Response response = await get(Uri.https('gogoanime.fi', url));
+    Response response = await get(Uri.https(baseUrl, url));
 
     BeautifulSoup bs = BeautifulSoup(response.body);
     List<Bs4Element>? res = bs.find('ul', class_: 'items')?.contents;
@@ -30,7 +31,7 @@ class AnimeScrape {
   }
 
   Future<void> getAnime() async {
-    Response response = await get(Uri.https('gogoanime.fi', url));
+    Response response = await get(Uri.https(baseUrl, url));
 
     BeautifulSoup bs = BeautifulSoup(response.body);
     Bs4Element? res = bs.find('div', class_: 'anime_info_body_bg');
@@ -40,7 +41,7 @@ class AnimeScrape {
   }
 
   Future<void> getAnimeSearch(String key) async {
-    Response response = await get(Uri.https('gogoanime.fi', '/search.html', {
+    Response response = await get(Uri.https(baseUrl, '/search.html', {
       'keyword': key
     }));
 
@@ -54,12 +55,12 @@ class AnimeScrape {
   }
 
   Future<String> getBaseEpisodeLink() async {
-    return "https://gogoanime.fi/" + url.replaceAll("https://gogoanime.fi/category/", "").replaceFirst("/category/", "");
+    return "https://" + baseUrl + "/" + url.replaceAll("https://" + baseUrl + "/category/", "").replaceFirst("/category/", "");
   }
 
 
   Future<String> getPlayer() async {
-    Response response = await get(Uri.https('gogoanime.fi', url));
+    Response response = await get(Uri.https(baseUrl, url));
 
     BeautifulSoup bs = BeautifulSoup(response.body);
     Bs4Element? res = bs.find('div', class_: 'play-video');
