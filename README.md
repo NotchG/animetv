@@ -6,7 +6,7 @@ Supports windows, controller, android, (ios?)
 scraped from gogoanime
 
 
-# Todo
+#### Todo
 * Account and friends system
 
 #### Severe bugs

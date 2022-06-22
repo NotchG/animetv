@@ -261,7 +261,7 @@ class _HomeState extends State<Home> {
                         const SizedBox(
                           height: 50.0,
                         ),
-                        ElevatedButton.icon(
+                        TextButton(
                             onPressed: () {
                              setState(() {
                                popularMenu = false;
@@ -278,20 +278,27 @@ class _HomeState extends State<Home> {
                               backgroundColor: MaterialStateProperty.all(const Color(0xff151515)),
                                 overlayColor: MaterialStateProperty.all(Colors.transparent)
                             ),
-                            icon: Icon(
-                              Icons.search,
-                              color:  searchHover ? Colors.greenAccent : (searchMenu ? Colors.redAccent : Colors.white),
-                              size: 40.0,
-                            ),
-                            label: Padding(
-                              padding: EdgeInsets.all((popularHover || searchHover || profileHover) ? 13.0 : 0),
-                              child: Text((popularHover || searchHover || profileHover) ? "Search" : "", style: TextStyle(fontSize: FontSize.xxLarge.size, fontWeight: FontWeight.w200),),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.search,
+                                  color:  searchHover ? Colors.greenAccent : (searchMenu ? Colors.redAccent : Colors.white),
+                                  size: 40.0,
+                                ),
+                                (popularHover || searchHover || profileHover) ? Row(
+                                  children: [
+                                    SizedBox(width: 16,),
+                                    Text((popularHover || searchHover || profileHover) ? "Search" : "", style: TextStyle(fontSize: FontSize.xxLarge.size, fontWeight: FontWeight.w200, color: Colors.white),),
+                                  ],
+                                ) : SizedBox()
+                              ],
                             )
                         ),
                         const SizedBox(
                           height: 50.0,
                         ),
-                        ElevatedButton.icon(
+                        TextButton(
                             onPressed: () {
                               setState(() {
                                 popularMenu = true;
@@ -308,15 +315,25 @@ class _HomeState extends State<Home> {
                                 backgroundColor: MaterialStateProperty.all(const Color(0xff151515)),
                               overlayColor: MaterialStateProperty.all(Colors.transparent)
                             ),
-                            icon: Icon(
-                              Icons.local_fire_department_outlined,
-                              color: popularHover ? Colors.greenAccent : (popularMenu ? Colors.redAccent : Colors.white),
-                              size: 40.0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.local_fire_department_outlined,
+                                  color: popularHover ? Colors.greenAccent : (popularMenu ? Colors.redAccent : Colors.white),
+                                  size: 40.0,
+                                ),
+                                (popularHover || searchHover || profileHover) ? Row(
+                                  children: [
+                                    SizedBox(width: 16,),
+                                    Text(
+                                      "Popular",
+                                      style: TextStyle(fontSize: FontSize.xxLarge.size, fontWeight: FontWeight.w200, color: Colors.white),
+                                    )
+                                  ],
+                                ) : SizedBox()
+                              ],
                             ),
-                            label: Padding(
-                              padding: EdgeInsets.all((popularHover || searchHover || profileHover) ? 13.0 : 0),
-                              child: Text((popularHover || searchHover || profileHover) ? "Popular" : "", style: TextStyle(fontSize: FontSize.xxLarge.size, fontWeight: FontWeight.w200),),
-                            )
                         )
                       ],
                     ),
