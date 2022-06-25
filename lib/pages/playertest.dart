@@ -4,6 +4,7 @@ import 'package:disposebag/disposebag.dart';
 import 'package:dpad_container/dpad_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rxdart/rxdart.dart';
 import 'dart:async';
 
 import 'package:webview_windows/webview_windows.dart';
@@ -34,7 +35,7 @@ class _PlayerState extends State<Player> {
 
   DisposeBag bag = DisposeBag();
 
-  final streamController = StreamController();
+  final streamController = BehaviorSubject<String>();
 
   int timer = 5;
 
@@ -43,11 +44,16 @@ class _PlayerState extends State<Player> {
       return;
     }
     await Future.delayed(Duration(seconds: 1));
+    if(stopEverything) {
+      return;
+    }
     if (timer == 0) {
       if(!hideMenu) {
-        setState(() {
-          hideMenu = true;
-        });
+        if (mounted) {
+          setState(() {
+            hideMenu = true;
+          });
+        }
       }
       hideMenuTimer();
     } else {
@@ -60,44 +66,46 @@ class _PlayerState extends State<Player> {
   void initState() {
     super.initState();
     initPlatformState();
+    Future.delayed(Duration(seconds: 1)).whenComplete(() {
     videoSlider();
-    hideMenuTimer();
-    streamController.addStream(_controller.title);
-      /*final sub = _controller.url.listen((event) {
-        if (event.contains("nextEpisodeNotchG")) {
-          if (currEps < totalEps) {
-            AnimeScrape(url: Url.replaceAll("https://" + baseUrl + "", "") +
-                (currEps + 1).toString()).getPlayer().then((value) =>
-                _controller.loadUrl(value));
-            setState(() {
-              currEps++;
-              isPause = true;
-            });
-            autoPlayEp();
-          }
-        }
-      });*/
-      /*final sub2 = _controller.title.listen((event) {
-        if(double.tryParse(event) == null) {
-          setState(() {
-            currSec = 0;
-          });
-        } else {
-          setState(() {
-            currSec = double.parse(event);
-          });
-        }
-      });*/
+        hideMenuTimer();
+    deleteAd();
+  });
 
+    final sub = _controller.title.listen(streamController.add);
+    streamController.listen((e) {
+      if (mounted) {
+        setState(() {
+          currSec = double.tryParse(e) ?? 0;
+        });
+      }
+    });
+    bag.add(sub);
+    bag.add(streamController);
+  }
+
+  void initContTitleStream() async {
+    /*var sub = _controller.title.listen((event) {
+      setState(() {
+        currSec = double.tryParse(event) ?? 0;
+      });
+    });*/
+      final sub = _controller.title.listen(streamController.add);
+      streamController.listen((e) {
+          currSec = double.tryParse(e) ?? 0;
+      });
+    while(!stopEverything) {
+      await Future.delayed(Duration(seconds: 1));
+    }
+    print("initContTitleStream Stopped");
   }
 
   void videoSlider() async {
     if(stopEverything) {
       return;
     }
-    await Future.delayed(Duration(seconds: 1));
     await _controller.executeScript('document.title = parseFloat(document.getElementsByClassName("jw-progress jw-reset")[0].style.width)');
-    //await _controller.executeScript('document.title = (parseFloat(document.getElementsByClassName("jw-progress jw-reset")[0].style.width) / 100) * document.getElementsByClassName("jw-slider-time jw-background-color jw-reset jw-slider-horizontal jw-reset")[0].getAttribute("aria-valuemax")');
+    print("slider");
     videoSlider();
   }
 
@@ -111,10 +119,17 @@ class _PlayerState extends State<Player> {
     });
   }
 
+  void deleteAd() async {
+    if(stopEverything) {
+      return;
+    }
+    await _controller.executeScript('document.getElementsByTagName("iframe")[document.getElementsByTagName("iframe").length - 1].remove();');
+    deleteAd();
+  }
+
   void checkNextEp() async {
     await Future.delayed(Duration(seconds: 1));
     await _controller.executeScript('if(document.getElementsByClassName("jw-progress jw-reset")[0].style.width == "100%") {window.location.replace("nextEpisodeNotchG");}');
-    await _controller.executeScript('document.getElementsByTagName("iframe")[document.getElementsByTagName("iframe").length - 1].remove();');
     checkNextEp();
   }
 
@@ -169,7 +184,9 @@ class _PlayerState extends State<Player> {
 
   @override
   void dispose() async {
-    super.dispose();
+      await bag.dispose();
+      super.dispose();
+
   }
 
 
@@ -190,7 +207,7 @@ class _PlayerState extends State<Player> {
       if (!mounted) return;
       setState(() {});
     } on PlatformException catch (e) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance?.addPostFrameCallback((_) {
         showDialog(
             context: context,
             builder: (_) => AlertDialog(
@@ -375,8 +392,9 @@ class _PlayerState extends State<Player> {
                                   ElevatedButton.icon(
                                     onPressed: () async {
                                       stopEverything = true;
-                                      await Future.delayed(Duration(seconds: 2));
-                                      await bag.dispose();
+                                      //await bag.dispose();
+                                      dispose();
+                                      //await streamController.close();
                                       Navigator.pop(context);
                                     },
                                     style: ButtonStyle(
