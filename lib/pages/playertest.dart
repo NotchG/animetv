@@ -1,9 +1,12 @@
+
+
 import 'package:animetv/services/animescrape.dart';
 import 'package:desktop_window/desktop_window.dart';
 import 'package:disposebag/disposebag.dart';
 import 'package:dpad_container/dpad_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:rxdart/rxdart.dart';
 import 'dart:async';
 
@@ -35,7 +38,7 @@ class _PlayerState extends State<Player> {
 
   DisposeBag bag = DisposeBag();
 
-  final streamController = BehaviorSubject<String>();
+  late BehaviorSubject<String>? streamController;
 
   int timer = 5;
 
@@ -61,7 +64,7 @@ class _PlayerState extends State<Player> {
       hideMenuTimer();
     }
   }
-
+  late StreamSubscription<String>? sub;
   @override
   void initState() {
     super.initState();
@@ -71,20 +74,18 @@ class _PlayerState extends State<Player> {
         hideMenuTimer();
     deleteAd();
   });
-
-    final sub = _controller.title.listen(streamController.add);
-    streamController.listen((e) {
+  streamController = BehaviorSubject();
+    sub = _controller.title.asBroadcastStream().listen(streamController!.add);
+    streamController!.listen((e) {
       if (mounted) {
         setState(() {
           currSec = double.tryParse(e) ?? 0;
         });
       }
     });
-    bag.add(sub);
-    bag.add(streamController);
   }
 
-  void initContTitleStream() async {
+  /*void initContTitleStream() async {
     /*var sub = _controller.title.listen((event) {
       setState(() {
         currSec = double.tryParse(event) ?? 0;
@@ -98,20 +99,18 @@ class _PlayerState extends State<Player> {
       await Future.delayed(Duration(seconds: 1));
     }
     print("initContTitleStream Stopped");
-  }
+  }*/
 
   void videoSlider() async {
     if(stopEverything) {
       return;
     }
     await _controller.executeScript('document.title = parseFloat(document.getElementsByClassName("jw-progress jw-reset")[0].style.width)');
-    print("slider");
     videoSlider();
   }
 
   void autoPlayEp() async {
     await Future.delayed(Duration(seconds: 15));
-    await _controller.executeScript('document.getElementsByTagName("video")[0].click();');
     await _controller.executeScript('document.getElementsByTagName("video")[0].click();');
     await _controller.executeScript('document.getElementsByTagName("video")[0].click();');
     setState(() {
@@ -185,8 +184,11 @@ class _PlayerState extends State<Player> {
   @override
   void dispose() async {
       await bag.dispose();
+      await sub!.cancel();
+      await streamController!.close();
+      sub = null;
+      streamController = null;
       super.dispose();
-
   }
 
 
@@ -272,30 +274,32 @@ class _PlayerState extends State<Player> {
         MaterialState.focused,
       };
       if (states.any(interactiveStates.contains)) {
-        return Colors.greenAccent;
+        return Colors.black38;
       }
-      return ep == currEps ? Colors.redAccent : Colors.blueAccent;
+      return ep == currEps ? Colors.redAccent : Color(0xff151515);
     }
 
     return(
-        ElevatedButton(
-          onPressed: () {
-            currEps = ep;
-            AnimeScrape(url: Url.replaceAll("https://" + baseUrl + "", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
-            setState(() {
+            ElevatedButton(
+              onPressed: () {
+                currEps = ep;
+                AnimeScrape(url: Url.replaceAll("https://" + baseUrl + "", "") + currEps.toString()).getPlayer().then((value) => _controller.loadUrl(value));
+                setState(() {
 
-            });
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(ep.toString(), style: TextStyle(fontSize: 1/80 * MediaQuery.of(context).size.width),),
-          ),
-          style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.resolveWith((states) => getColor(states)),
-              elevation: MaterialStateProperty.all(0)
-          ),
-        )
-    );
+                });
+              },
+              autofocus: ep == currEps,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 0),
+                child: Text("Episode " + ep.toString(), style: TextStyle(fontSize: 1/80 * MediaQuery.of(context).size.width),),
+              ),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((states) => getColor(states)),
+                  elevation: MaterialStateProperty.all(0),
+                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+              ),
+            )
+        );
   }
   bool onMenu = true;
   bool isPause = true;
@@ -305,6 +309,7 @@ class _PlayerState extends State<Player> {
   bool fullscreenButton = false;
   bool backButton = false;
   bool episodeMenuButton = false;
+  bool showEpisodesMenu = false;
 
   void initializeAnime() async {
     if (!_controller.value.isInitialized) {
@@ -341,9 +346,11 @@ class _PlayerState extends State<Player> {
       autofocus: true,
       onKey: (e) {
         timer = 5;
-        setState(() {
-          hideMenu = false;
-        });
+        if (mounted) {
+          setState(() {
+            hideMenu = false;
+          });
+        }
       },
       focusNode: FocusNode(),
       child: Scaffold(
@@ -392,8 +399,9 @@ class _PlayerState extends State<Player> {
                                   ElevatedButton.icon(
                                     onPressed: () async {
                                       stopEverything = true;
-                                      //await bag.dispose();
                                       dispose();
+                                      await Future.delayed(Duration(seconds: 2));
+                                      //await bag.dispose();
                                       //await streamController.close();
                                       Navigator.pop(context);
                                     },
@@ -414,10 +422,10 @@ class _PlayerState extends State<Player> {
                                     ), label: SizedBox(),
                                   ),
                                   Text(
-                                    title,
+                                    title + " - Episode " + currEps.toString(),
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 20.0
+                                      fontSize: 25.0
                                     ),
                                   )
                                 ],
@@ -429,19 +437,21 @@ class _PlayerState extends State<Player> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   ElevatedButton.icon(
-                                    onPressed: () async {
-
-                                    },
+                                    onPressed: !showEpisodesMenu ? () async {
+                                      setState(() {
+                                        showEpisodesMenu = true;
+                                      });
+                                    } : null,
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.all(Colors.transparent),
                                         overlayColor: MaterialStateProperty.all(Colors.transparent),
                                         elevation: MaterialStateProperty.all(0)
                                     ),
-                                    onFocusChange: (bool b) {
+                                    onFocusChange: !showEpisodesMenu ? (bool b) {
                                       setState(() {
                                         episodeMenuButton = b;
                                       });
-                                    },
+                                    } : null,
                                     icon: Icon(
                                       Icons.video_collection_sharp,
                                       size: 1/30 * MediaQuery.of(context).size.width,
@@ -594,6 +604,47 @@ class _PlayerState extends State<Player> {
                   ),
                 ],
               ),
+                showEpisodesMenu ? Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        size: 45.0,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          showEpisodesMenu = false;
+                        });
+                      },
+                    ),
+                    SizedBox(width: 35.0),
+                    SingleChildScrollView(
+                      child: Container(
+                        width: 1/4 * MediaQuery.of(context).size.width,
+                        color: const Color(0xff151515),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(
+                                "Episodes",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 30.0
+                                ),
+                              ),
+                            ),
+                            for(int i = 1;i <= totalEps;i++) EpisodeButton(i)
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ) : SizedBox()
               ],
             ),
           ]
